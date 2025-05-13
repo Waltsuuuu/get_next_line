@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/12 13:00:36 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/12 18:12:57 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/13 14:28:55 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ char	*ft_strldup(const char *s, size_t len)
 	return (new_str);
 }
 
-int	get_chars_to_newline(char *str)
+int	count_chars_to_newline(char *str)
 {
 	int	i;
 	int	chars;
@@ -53,21 +53,14 @@ char *get_next_line(int fd)
 
 	new_line = 0;
 	buf = malloc(4);
-	stash = malloc(4);
+	if (stash == NULL)
+		stash = malloc(4);
+	printf("Stash = %s\n", stash);
 	while (new_line == 0)
 	{
 		bytes_read = read(fd, buf, 3);
 		printf("Read %d bytes from fd '%d'.\n", bytes_read, fd);
-		if(bytes_read > 0)
-		{
-			buf[bytes_read] = '\0';
-			printf("null terminated buf.\n");
-		}
-		if (bytes_read <= 0)
-		{
-			free (buf);
-			return(NULL);
-		}
+		buf[bytes_read] = '\0';
 		temp_stash = ft_strjoin(stash, buf);
 		free (stash);
 		stash = temp_stash;
@@ -78,8 +71,16 @@ char *get_next_line(int fd)
 			printf("NEW LINE FOUND IN STASH\n");
 			break ;
 		}
+		if (bytes_read <= 0)
+		{
+			free (buf);
+			return(NULL);
+		}
 	}
-	line = ft_strldup(stash, get_chars_to_newline(stash));
+	line = ft_strldup(stash, count_chars_to_newline(stash));
+	temp_stash = ft_strdup(ft_strchr(stash, '\n') + 1);
+	free(stash);
+	stash = temp_stash;
 	return line;
 }
 
