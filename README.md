@@ -1,8 +1,24 @@
 # get_next_line
 
+`get_next_line` is a function written in C that reads a file or standard input one line at a time. It returns a freshly allocated string containing the next line each time it's called, including the newline character (`\n`) if present.
 
+The implementation uses a static buffer (`stash`) to keep leftover data between calls, and reads from the file descriptor using the `read()` system call with a customizable buffer size (`BUFFER_SIZE`).
 
-## Line-by-Line explanation. 
+### Example Usage
+Reads the file `example.txt` line by line, prints each line to the terminal, and properly frees memory after each line.
+
+```c
+int fd = open("example.txt", O_RDONLY);
+char *line;
+
+while ((line = get_next_line(fd)) != NULL)
+{
+    printf("%s", line);
+    free(line);
+}
+close(fd);
+```
+## Line-by-Line breakdown. 
 ### 1. Variable declarations
 `char *buf`
 	Buffer to store the contents read by the read() operation.
@@ -20,19 +36,22 @@ buf = malloc(BUFFER_SIZE + 1);
 ```
 Allocate memory for the buffer *buf* using malloc().
 
-
-- *BUFFER_SIZE is a macro defined in the header file (get_next_line.h). It is set to 32 bytes, but it can also be changed by compiling with `-D` flag;*
+*BUFFER_SIZE is a macro defined in the header file (get_next_line.h). It is set to 32 bytes, but it can also be changed by compiling with `-D` flag;*
     
     `cc main.c -D BUFFER_SIZE=9999`
 
-- *+1 is added for the null terminator, as we need buf to be a valid string.*
-
++1 is added for the null terminator, as we need *buf* to be a valid string.
+<br>
+<br>
+<br>
 
 ```
 if (stash == NULL)
 ```
 Check if stash has been initialized.
-
+<br>
+<br>
+<br>
 ```
 	stash = ft_strdup("");
 ```
