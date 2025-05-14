@@ -64,7 +64,7 @@ If stash is NULL, we need to initialize *stash* to be an empty null terminated s
 ```c
 stash = read_operation(fd, buf, stash);
 ```
-Read the file `BUFFER_SIZE` chunks and store the chunks in *stash*, until we find a newline `\n` in *stash*.
+Read the file in `BUFFER_SIZE` chunks and store the chunks in *stash*, until we find a newline `\n` in *stash*.
 <br>
 <br>
 <br>
