@@ -31,7 +31,7 @@ close(fd);
 
 ---
 ### 2. Memory allocation
-```
+```c
 buf = malloc(BUFFER_SIZE + 1);
 ```
 Allocate memory for the buffer *buf* using malloc().
@@ -45,14 +45,14 @@ Allocate memory for the buffer *buf* using malloc().
 <br>
 <br>
 
-```
+```c
 if (stash == NULL)
 ```
 Check if stash has been initialized.
 <br>
 <br>
 <br>
-```
+```c
 	stash = ft_strdup("");
 ```
 If stash is NULL, we need to initialize *stash* to be an empty null terminated string. For this, we use our helper function ft_strdup().The function allocates memory and returns a duplicate of the string passed in as an argument. <br>
@@ -61,7 +61,7 @@ If stash is NULL, we need to initialize *stash* to be an empty null terminated s
 
 ### 3. The read operation
 
-```
+```c
 stash = read_operation(fd, buf, stash);
 ```
 Read the file `BUFFER_SIZE` chunks and store the chunks in *stash*, until we find a newline `\n` in *stash*.
@@ -71,7 +71,7 @@ Read the file `BUFFER_SIZE` chunks and store the chunks in *stash*, until we fin
 
 ***Inside the helper function***
 
-```
+```c
 char	*read_operation(int fd, char *buf, char *stash)
 ```
 
@@ -89,7 +89,7 @@ read_operation() is a helper function which will read the file in chunks and sto
 <br>
 <br>
 
-```
+```c
 while (1)
 ```
 While (1), is an infinite loop. This loop will only stop if a break is found. In our case, break will be used when there is nothing left to read, or a newline is found in *stash*.
@@ -97,7 +97,7 @@ While (1), is an infinite loop. This loop will only stop if a break is found. In
 <br>
 <br>
 
-```
+```c
 bytes_read = read(fd, buf, BUFFER_SIZE);
 ```
 Store the number of bytes read by the read() operation in the variable bytes_read.
@@ -106,7 +106,7 @@ Run the read() operation on the *fd* specified by the caller, storing the read c
 <br>
 <br>
 
-```
+```c
 if (bytes_read <= 0)`<br>
 	buf[0] = '\0';
 ``` 
@@ -115,7 +115,7 @@ If the read() operation returned 0 or less, meaning the end of the file was foun
 <br>
 <br>
 
-```
+```c
 else
     buf[bytes_read] = '\0';
 ```
@@ -124,7 +124,7 @@ If more than 0 bytes were read, we null terminate buf at the index specified by 
 <br>
 <br>
 
-```
+```c
 temp_stash = ft_strjoin(stash, buf);
 ```
 Concatenate the contents of *buf* into *stash* using the helper function *ft_strjoin()*. Storing the new string returned by *ft_strjoin* in *temp_stash*.
@@ -132,7 +132,7 @@ Concatenate the contents of *buf* into *stash* using the helper function *ft_str
 <br>
 <br>
 
-```
+```c
 free (stash);
 ```
 Free the current contents of *stash*.
@@ -140,7 +140,7 @@ Free the current contents of *stash*.
 <br>
 <br>
 
-```
+```c
 stash = temp_stash;
 
 ```
@@ -149,7 +149,7 @@ Assign the new string made of *stash*+*buf*, which is stored in *temp_stash*, to
 <br>
 <br>
 
-```
+```c
 if (ft_strchr(stash, '\n') != NULL || bytes_read <= 0)
 ```
 Check if *stash* contains a newline `\n`, using the helper function *ft_strchr()*<br>
@@ -159,7 +159,7 @@ if *bytes_read* is 0 or less, meaning the end of the file has been reached.
 <br>
 <br>
 
-```	
+```c
 	break ;
 ```
 If true, use *break* to exit the while loop.<br>
@@ -169,7 +169,8 @@ Eventually a newline character will be found or the end of the file will be reac
 <br>
 <br>
 <br>
-```
+
+```c
 return (stash);
 ```
 Once the while loop ends, we will return stash.
@@ -177,7 +178,7 @@ Once the while loop ends, we will return stash.
 ---
 
 ### 4. End of file check / Error check.
-```
+```c
 if (stash == NULL || *stash == '\0')
 ```
 If the read() operation returned NULL or stash points to a null terminator. We have nothing to return to the caller. The end of the file has been reached or there has been an error reading the file.
@@ -185,7 +186,7 @@ If the read() operation returned NULL or stash points to a null terminator. We h
 <br>
 <br>
 
-```
+```c
 {
 	free (buf);
 	free (stash);
@@ -199,7 +200,7 @@ Finally return (NULL).
 
 ---
 ### 5. Line extraction.
-```
+```c
 line = extract_line(stash, &stash);
 ```
 The line variable will hold the portion of the *stash* string up to and containing the newline character OR up to the end of the file, if no newline is present.
@@ -208,7 +209,7 @@ The line variable will hold the portion of the *stash* string up to and containi
 <br>
 
 ***Inside the helper fucntion***
-```
+```c
 char	*extract_line(char *stash, char **updated_stash)
 ```
 extract_line() is a helper function that extracts the next line from stash, including the newline if present.
@@ -231,7 +232,7 @@ Why *****updated_stash?***<br>
 <br>
 <br>
 
-```
+```c
 newline_index = ft_strchr(stash, '\n');
 ```
 Find the index of the newline character in stash with the helper function ft_strchr() and store the index in newline_index.
@@ -239,7 +240,7 @@ Find the index of the newline character in stash with the helper function ft_str
 <br>
 <br>
 
-```
+```c
 if (newline_index)
 {
 	line = ft_strldup(stash, count_chars_to_newline(stash));
@@ -256,7 +257,7 @@ This trims the processed line from *stash* and keeps only what’s left for the 
 <br>
 <br>
 
-```
+```c
 else
 {
 	line = ft_strdup(stash);
@@ -272,14 +273,14 @@ Update *stash* to NULL. As we no longer need to store content inside it.
 <br>
 <br>
 
-```
+```c
 return (line);
 ```
 Return the extracted string - *line*, back to *get_next_line()*.
 
 ---
 ### 6. Free and Return
-```
+```c
 free (buf);
 ```
 Free the buf memory.
@@ -287,7 +288,7 @@ Free the buf memory.
 <br>
 <br>
 
-```
+```c
 return (line);
 ```
 Return the extracted line.
