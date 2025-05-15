@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:15:23 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/15 18:08:03 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/15 18:56:52 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,21 +22,6 @@ char	*ft_strldup(const char *s, size_t len)
 	ft_memcpy(new_str, s, len);
 	new_str[len] = '\0';
 	return (new_str);
-}
-
-int	count_chars_to_newline(char *str)
-{
-	int	i;
-	int	chars;
-
-	i = 0;
-	chars = 1;
-	while (str[i] != '\n')
-	{
-		i++;
-		chars++;
-	}
-	return (chars);
 }
 
 char	*read_operation(int fd, char *buf, char *stash)
@@ -63,13 +48,17 @@ char	*read_operation(int fd, char *buf, char *stash)
 char	*extract_line(char *stash, char **updated_stash)
 {
 	char	*line;
-	char	*newline_index;
+	char	*newline_i_ptr;
+	int	newline_index;
 
-	newline_index = ft_strchr(stash, '\n');
-	if (newline_index)
+	newline_i_ptr = ft_strchr(stash, '\n');
+	if (newline_i_ptr)
 	{
-		line = ft_strldup(stash, count_chars_to_newline(stash));
-		*updated_stash = ft_strdup(newline_index + 1);
+		newline_index = 0;
+		while (stash[newline_index] != '\n')
+			newline_index++;
+		line = ft_strldup(stash, newline_index + 1);
+		*updated_stash = ft_strdup(newline_i_ptr + 1);
 	}
 	else
 	{
@@ -109,20 +98,19 @@ char	*get_next_line(int fd)
 	char				*buf;
 	char				*line;
 
-	//If no list exists, create the first node based on the passed in fd.
 	if (!head)
 	{
 		head = ft_lstnew_fd(fd);
 		current = head;
 	}
-	else //If a linked list exists, search for the node that represents the fd.
+	else
 	{
-		current = head; //Sets current to the start of the linked list.
+		current = head;
 		while (current != NULL)
 		{
-			if (current->fd == fd) //If the node is found, current points to the correct node
+			if (current->fd == fd)
 				break ;
-			if (!current->next) //If no node is found, create a node for the fd.
+			if (!current->next)
 			{
 				current->next = ft_lstnew_fd(fd);
 				current = current->next;
@@ -131,22 +119,21 @@ char	*get_next_line(int fd)
 			current = current->next;
 		}
 	}
-	//At this point current->stash should point to the stash of the fd.
 	buf = malloc(BUFFER_SIZE + 1);
 	current->stash = read_operation(fd, buf, current->stash);
 	if (current->stash == NULL || *current->stash == '\0')
 	{
 		free (buf);
-		if (head == current) //If the node we must delete is the head node.
+		if (head == current)
 		{
-			head = head->next; //Set the node after the current head to be the new head
-			ft_lstdelone_fd(current, free); //Delete the node
+			head = head->next;
+			ft_lstdelone_fd(current, free);
 		}
 		else
 		{
 			previous = head;
-			while (previous && previous->next != current) //Prev will point to the node just before current
-				previous = previous->next; //Traverse the linked list tuntil prev->next points to current.
+			while (previous && previous->next != current)
+				previous = previous->next;
 			if (previous)
 			{
 				previous->next = current->next;
