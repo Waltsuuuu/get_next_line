@@ -4,6 +4,9 @@
 
 The implementation uses a static buffer (`stash`) to keep leftover data between calls, and reads from the file descriptor using the `read()` system call with a customizable buffer size (`BUFFER_SIZE`).
 
+***Note***
+- The use of *lseek()* and global variables was forbidden for this project.
+
 ### Example Usage
 Reads the file `example.txt` line by line, prints each line to the terminal, and properly frees memory after each line.
 
