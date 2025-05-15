@@ -6,23 +6,11 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:15:23 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/15 18:56:52 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/15 19:02:08 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line_bonus.h"
-
-char	*ft_strldup(const char *s, size_t len)
-{
-	char	*new_str;
-
-	new_str = malloc(len * sizeof(char) + 1);
-	if (!new_str)
-		return (NULL);
-	ft_memcpy(new_str, s, len);
-	new_str[len] = '\0';
-	return (new_str);
-}
 
 char	*read_operation(int fd, char *buf, char *stash)
 {

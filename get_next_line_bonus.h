@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:16:03 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/15 16:07:02 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/15 19:02:28 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,6 @@ typedef struct s_fd_node
 	struct s_fd_node	*next;
 }				t_fd_node;
 
-void	*ft_memcpy(void *dest, const void *src, size_t n);
 size_t	ft_strlen(const char *src);
 char	*ft_strchr(const char *s, int c);
 char	*ft_strjoin(char const *s1, char const *s2);

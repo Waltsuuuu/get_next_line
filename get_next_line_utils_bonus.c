@@ -6,27 +6,28 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:16:00 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/15 18:16:34 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/15 19:07:07 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line_bonus.h"
 
-void	*ft_memcpy(void *dest, const void *src, size_t n)
+char	*ft_strldup(const char *s, size_t len)
 {
-	unsigned char		*dest_str;
-	const unsigned char	*src_str;
-	size_t				i;
-
-	dest_str = (unsigned char *)dest;
-	src_str = (const unsigned char *)src;
+	char	*new_str;
+	int		i;
+	
+	new_str = malloc(len * sizeof(char) + 1);
+	if (!new_str)
+		return (NULL);
 	i = 0;
-	while (n--)
+	while (len--)
 	{
-		dest_str[i] = src_str[i];
+		new_str[i] = s[i];
 		i++;
 	}
-	return (dest_str);
+	new_str[i] = '\0';
+	return (new_str);
 }
 
 size_t	ft_strlen(const char *src)
@@ -91,11 +92,18 @@ char	*ft_strdup(const char *s)
 {
 	char	*new_str;
 	size_t	len;
+	int		i;
 
-	len = ft_strlen((char *)s) + 1;
-	new_str = malloc(len * sizeof(char));
+	len = ft_strlen((char *)s);
+	new_str = malloc(len * sizeof(char) + 1);
 	if (!new_str)
 		return (NULL);
-	ft_memcpy(new_str, s, len);
+	i = 0;
+	while (len--)
+	{
+		new_str[i] = s[i];
+		i++;
+	}
+	new_str[i] = '\0';
 	return (new_str);
 }
