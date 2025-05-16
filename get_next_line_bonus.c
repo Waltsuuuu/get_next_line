@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:15:23 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/15 19:02:08 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/16 14:02:46 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ char	*extract_line(char *stash, char **updated_stash)
 {
 	char	*line;
 	char	*newline_i_ptr;
-	int	newline_index;
+	int		newline_index;
 
 	newline_i_ptr = ft_strchr(stash, '\n');
 	if (newline_i_ptr)
@@ -70,19 +70,37 @@ t_fd_node	*ft_lstnew_fd(int fd)
 	return (new_node);
 }
 
-void	ft_lstdelone_fd(t_fd_node *lst, void (*del) (void *))
+void	ft_remove_node_fd(t_fd_node **head, t_fd_node *current)
 {
-	if (lst == NULL || del == NULL)
+	t_fd_node			*previous;
+
+	if (*head == NULL || current == NULL)
 		return ;
-	del(lst->stash);
-	free(lst);
+	if (*head == current)
+	{
+		*head = (*head)->next;
+		free(current->stash);
+		free(current);
+	}
+	else
+	{
+		previous = *head;
+		while (previous && previous->next != current)
+			previous = previous->next;
+		if (previous)
+		{
+			previous->next = current->next;
+			free(current->stash);
+			free(current);
+		}
+	}
+	return ;
 }
 
 char	*get_next_line(int fd)
 {
 	static t_fd_node	*head;
 	t_fd_node			*current;
-	t_fd_node			*previous;
 	char				*buf;
 	char				*line;
 
@@ -112,22 +130,7 @@ char	*get_next_line(int fd)
 	if (current->stash == NULL || *current->stash == '\0')
 	{
 		free (buf);
-		if (head == current)
-		{
-			head = head->next;
-			ft_lstdelone_fd(current, free);
-		}
-		else
-		{
-			previous = head;
-			while (previous && previous->next != current)
-				previous = previous->next;
-			if (previous)
-			{
-				previous->next = current->next;
-				ft_lstdelone_fd(current, free);
-			}
-		}
+		ft_remove_node_fd(&head, current);
 		return (NULL);
 	}
 	line = extract_line(current->stash, &current->stash);
