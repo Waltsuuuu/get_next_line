@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:15:23 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/16 14:02:46 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/16 14:30:44 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,19 +57,6 @@ char	*extract_line(char *stash, char **updated_stash)
 	return (line);
 }
 
-t_fd_node	*ft_lstnew_fd(int fd)
-{
-	t_fd_node	*new_node;
-
-	new_node = malloc(sizeof(t_fd_node));
-	if (!new_node)
-		return (NULL);
-	new_node->fd = fd;
-	new_node->stash = ft_strdup("");
-	new_node->next = NULL;
-	return (new_node);
-}
-
 void	ft_remove_node_fd(t_fd_node **head, t_fd_node *current)
 {
 	t_fd_node			*previous;
@@ -97,6 +84,23 @@ void	ft_remove_node_fd(t_fd_node **head, t_fd_node *current)
 	return ;
 }
 
+t_fd_node	*find_or_create_node(t_fd_node **head, int fd)
+{
+	t_fd_node	**node;
+
+	node = head;
+	while (*node && (*node)->fd != fd)
+		node = &(*node)->next;
+	if (!*node)
+	{
+		*node = malloc(sizeof(t_fd_node));
+		(*node)->fd = fd;
+		(*node)->stash = ft_strdup("");
+		(*node)->next = NULL;
+	}
+	return (*node);
+}
+
 char	*get_next_line(int fd)
 {
 	static t_fd_node	*head;
@@ -104,27 +108,7 @@ char	*get_next_line(int fd)
 	char				*buf;
 	char				*line;
 
-	if (!head)
-	{
-		head = ft_lstnew_fd(fd);
-		current = head;
-	}
-	else
-	{
-		current = head;
-		while (current != NULL)
-		{
-			if (current->fd == fd)
-				break ;
-			if (!current->next)
-			{
-				current->next = ft_lstnew_fd(fd);
-				current = current->next;
-				break ;
-			}
-			current = current->next;
-		}
-	}
+	current = find_or_create_node(&head, fd);
 	buf = malloc(BUFFER_SIZE + 1);
 	current->stash = read_operation(fd, buf, current->stash);
 	if (current->stash == NULL || *current->stash == '\0')
