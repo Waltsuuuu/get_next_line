@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:16:00 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/15 19:07:07 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/16 14:36:46 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,7 @@ char	*ft_strldup(const char *s, size_t len)
 {
 	char	*new_str;
 	int		i;
-	
+
 	new_str = malloc(len * sizeof(char) + 1);
 	if (!new_str)
 		return (NULL);
