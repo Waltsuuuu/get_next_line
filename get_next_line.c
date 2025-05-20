@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:15:23 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/14 19:55:13 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/20 22:13:30 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,21 +22,6 @@ char	*ft_strldup(const char *s, size_t len)
 	ft_memcpy(new_str, s, len);
 	new_str[len] = '\0';
 	return (new_str);
-}
-
-int	count_chars_to_newline(char *str)
-{
-	int	i;
-	int	chars;
-
-	i = 0;
-	chars = 1;
-	while (str[i] != '\n')
-	{
-		i++;
-		chars++;
-	}
-	return (chars);
 }
 
 char	*read_operation(int fd, char *buf, char *stash)
@@ -60,35 +45,56 @@ char	*read_operation(int fd, char *buf, char *stash)
 	return (stash);
 }
 
-char	*extract_line(char *stash, char **updated_stash)
+size_t	ft_strlcpy(char *dst, const char *src, size_t dstsize)
+{
+	size_t	i;
+
+	i = 0;
+	if (dstsize == 0)
+		return (ft_strlen((char *)src));
+	while (i < dstsize - 1 && src[i])
+	{
+		dst[i] = src[i];
+		i++;
+	}
+	dst[i] = '\0';
+	return (ft_strlen((char *)src));
+}
+
+char	*extract_line(char *stash, char *leftover)
 {
 	char	*line;
-	char	*newline_index;
+	char	*newline_ptr;
+	int		newline_index;
 
-	newline_index = ft_strchr(stash, '\n');
-	if (newline_index)
+	newline_ptr = ft_strchr(stash, '\n');
+	if (newline_ptr)
 	{
-		line = ft_strldup(stash, count_chars_to_newline(stash));
-		*updated_stash = ft_strdup(newline_index + 1);
+		newline_index = 0;
+		while (stash[newline_index] != '\n')
+			newline_index++;
+		line = ft_strldup(stash, newline_index + 1);
+		ft_strlcpy(leftover, newline_ptr + 1, BUFFER_SIZE);
 	}
 	else
 	{
 		line = ft_strdup(stash);
-		*updated_stash = NULL;
+		leftover[0] = '\0';
 	}
-	free(stash);
 	return (line);
 }
 
 char	*get_next_line(int fd)
 {
 	char		*buf;
-	static char	*stash;
+	char		*stash;
 	char		*line;
+	static char	leftover[BUFFER_SIZE + 1];
 
+	if (leftover[0] == '\0')
+		leftover[0] = '\0';
 	buf = malloc(BUFFER_SIZE + 1);
-	if (stash == NULL)
-		stash = ft_strdup("");
+	stash = ft_strdup(leftover);
 	stash = read_operation(fd, buf, stash);
 	if (stash == NULL || *stash == '\0')
 	{
@@ -97,7 +103,8 @@ char	*get_next_line(int fd)
 		stash = NULL;
 		return (NULL);
 	}
-	line = extract_line(stash, &stash);
+	line = extract_line(stash, leftover);
 	free (buf);
+	free (stash);
 	return (line);
 }

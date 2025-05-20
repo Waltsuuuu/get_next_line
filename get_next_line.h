@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:16:03 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/15 15:03:41 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/20 21:42:56 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,7 +31,7 @@ char	*ft_strldup(const char *s, size_t len);
 int		count_chars_to_newline(char *str);
 char	*read_operation(int fd, char *buf, char *stash);
 char	*nothing_to_return(char *buf, char *stash);
-char	*extract_line(char *stash, char **updated_stash);
+char	*extract_line(char *stash, char *leftover);
 char	*get_next_line(int fd);
 
 #endif
