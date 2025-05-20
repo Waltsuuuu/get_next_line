@@ -437,7 +437,9 @@ return (*node);
 ```
 - Returns the pointer to the found or newly created node.
 </details>
+
 ---
+
 ### 4. Reading the file.
 ```c
 buf = malloc(BUFFER_SIZE + 1);
