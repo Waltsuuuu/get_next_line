@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:15:23 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/16 14:30:44 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/19 22:52:04 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,27 +33,30 @@ char	*read_operation(int fd, char *buf, char *stash)
 	return (stash);
 }
 
-char	*extract_line(char *stash, char **updated_stash)
+char	*extract_line(char **stash)
 {
+	char	*trimmed_stash;
 	char	*line;
 	char	*newline_i_ptr;
 	int		newline_index;
 
-	newline_i_ptr = ft_strchr(stash, '\n');
+	newline_i_ptr = ft_strchr(*stash, '\n');
 	if (newline_i_ptr)
 	{
 		newline_index = 0;
-		while (stash[newline_index] != '\n')
+		while ((*stash)[newline_index] != '\n')
 			newline_index++;
-		line = ft_strldup(stash, newline_index + 1);
-		*updated_stash = ft_strdup(newline_i_ptr + 1);
+		line = ft_strldup(*stash, newline_index + 1);
+		trimmed_stash = ft_strdup(newline_i_ptr + 1);
+		free(*stash);
+		*stash = trimmed_stash;
 	}
 	else
 	{
-		line = ft_strdup(stash);
-		*updated_stash = NULL;
+		line = ft_strdup(*stash);
+		free(*stash);
+		*stash = NULL;
 	}
-	free(stash);
 	return (line);
 }
 
@@ -117,7 +120,7 @@ char	*get_next_line(int fd)
 		ft_remove_node_fd(&head, current);
 		return (NULL);
 	}
-	line = extract_line(current->stash, &current->stash);
+	line = extract_line(&current->stash);
 	free (buf);
 	return (line);
 }

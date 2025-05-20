@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:16:03 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/16 14:36:21 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/19 21:02:56 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ char		*ft_strldup(const char *s, size_t len);
 int			count_chars_to_newline(char *str);
 char		*read_operation(int fd, char *buf, char *stash);
 char		*nothing_to_return(char *buf, char *stash);
-char		*extract_line(char *stash, char **updated_stash);
+char		*extract_line(char **stash);
 t_fd_node	*find_or_create_node(t_fd_node **head, int fd);
 void		ft_remove_node_fd(t_fd_node **head, t_fd_node *current);
 char		*get_next_line(int fd);
