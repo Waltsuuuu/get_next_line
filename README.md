@@ -541,7 +541,7 @@ When the loop ends, the final `stash`is returned.
 
 ---
 
-### 5. Nothing to return
+### 5. End of file / Error check.
 
 ```c
 if (current->stash == NULL || *current->stash == '\0')
@@ -657,7 +657,7 @@ return ;
 
 ---
 
-### 6. Something to return (extract line)
+### 6. Extract the return line from stash.
 
 ```c
 line = extract_line(current->stash, &current->stash);
@@ -676,18 +676,21 @@ This line calls the helper function `extract_line()` to:
 **Function prototype**
 
 
-`char *extract_line(char *stash, char **updated_stash)`
-- `stash` Holds the accumulated data from the previous read operations.
-- `updated_stash` is a pointer to the `stash` pointer so we can replace it with the leftover content after extracting the a line.
+`char *extract_line(char **stash)`
+- `stash` Pointer to the pointer of `stash`. Passing in the address of the pointer, we are able to update it with a new pointer that will point to the remaining content of `stash` once it has been trimmed. Dereferencing this will allow access to the values stored in `stash`. 
+
+
 
 **Variables**
+
+`char *trimmed_stash`
+- Will temporarily store the remaining contents of `stash` that come after the newline. 
 
 `char *line;`
 - Will hold the extracted line that will be returned.
 
 `char *newline_i_ptr;`
 - Pointer to the first `\n` character (if any).
-
 
 `int newline_index;`
 - The index / position of the newline character in the `stash` string.
@@ -708,7 +711,7 @@ Searches for the first occurance of `\n` in `stash`.
 if (newline_i_ptr)
 {
 	newline_index = 0;
-	while (stash[newline_index] != '\n')
+	while (*stash[newline_index] != '\n')
 		newline_index++;
 ```
 If a newline character is found in `stash`;
@@ -716,23 +719,57 @@ If a newline character is found in `stash`;
 <br>
 
 ```c
-	line = ft_strldup(stash, newline_index + 1);
+	line = ft_strldup(*stash, newline_index + 1);
 ````
 Duplicates the string **up to and including the newline character** and assigns the duplicated string to `line`.
 <br>
 
 ```c
-	*updated_stash = ft_strdup(newline_i_ptr + 1);
+	trimmed_stash = ft_strdup(newline_i_ptr + 1);
 ```
 Copies everything **after** the newline character in `stash` into a new string.
-- This becomes the updated `stash`, stored through the pointer `updated_stash`
+- Save the newly allocated string in `trimmed_stash`.
+<br>
 
-TBC because I found a new way to handle updating stash, and I want to write the doc based on that. 
+```c
+	free(*stash);
+	*stash = trimmed_stash;
+```
+- Free the old contents of `stash`.
+- Update the `stash` pointer to point to the beginning of the new trimmed string.
+<br>
+
+```c
+else
+{
+	line = ft_strdup(*stash);
+	free(*stash);
+	*stash = NULL;
+}
+```
+If no newline is found in `stash`, there is no need to trim the stash. 
+- Copy the remaining contents of `stash` to `line`.
+- Free the contents of `stash`.
+- Set stash to NULL, to prevent a dangling pointer.
+<br>
+
+```c
+return (line);
+```
+Finally return the extracted `line` from `stash` and exit function.
 
 </details>
 
 ---
 
+### 7. Free and exit.
+
+```c
+free (buf);
+return (line);
+```
+-Free the temporary buffer.
+-Return the `line` read from `fd` to the caller.
 
 </details>
 
