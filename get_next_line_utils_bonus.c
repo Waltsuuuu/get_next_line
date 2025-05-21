@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:16:00 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/19 22:58:36 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/21 12:45:05 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -88,22 +88,18 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	return (str);
 }
 
-char	*ft_strdup(const char *s)
+size_t	ft_strlcpy(char *dst, const char *src, size_t dstsize)
 {
-	char	*new_str;
-	size_t	len;
-	int		i;
+	size_t	i;
 
-	len = ft_strlen((char *)s);
-	new_str = malloc(len * sizeof(char) + 1);
-	if (!new_str)
-		return (NULL);
 	i = 0;
-	while (len--)
+	if (dstsize == 0)
+		return (ft_strlen((char *)src));
+	while (i < dstsize - 1 && src[i])
 	{
-		new_str[i] = s[i];
+		dst[i] = src[i];
 		i++;
 	}
-	new_str[i] = '\0';
-	return (new_str);
+	dst[i] = '\0';
+	return (ft_strlen((char *)src));
 }

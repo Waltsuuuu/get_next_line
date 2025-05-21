@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:15:23 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/19 22:52:04 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/21 13:42:56 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@ char	*read_operation(int fd, char *buf, char *stash)
 	int		bytes_read;
 	char	*temp_stash;
 
+	if (ft_strchr(stash, '\n'))
+		return (stash);
 	while (1)
 	{
 		bytes_read = read(fd, buf, BUFFER_SIZE);
@@ -33,13 +35,14 @@ char	*read_operation(int fd, char *buf, char *stash)
 	return (stash);
 }
 
-char	*extract_line(char **stash)
+char	*extract_line(char **stash, char leftover[BUFFER_SIZE + 1])
 {
-	char	*trimmed_stash;
 	char	*line;
 	char	*newline_i_ptr;
 	int		newline_index;
 
+	if (!stash || !*stash || **stash == '\0')
+		return (NULL);
 	newline_i_ptr = ft_strchr(*stash, '\n');
 	if (newline_i_ptr)
 	{
@@ -47,16 +50,15 @@ char	*extract_line(char **stash)
 		while ((*stash)[newline_index] != '\n')
 			newline_index++;
 		line = ft_strldup(*stash, newline_index + 1);
-		trimmed_stash = ft_strdup(newline_i_ptr + 1);
-		free(*stash);
-		*stash = trimmed_stash;
+		ft_strlcpy(leftover, newline_i_ptr + 1, BUFFER_SIZE + 1);
 	}
 	else
 	{
-		line = ft_strdup(*stash);
-		free(*stash);
-		*stash = NULL;
+		line = ft_strldup(*stash, ft_strlen(*stash));
+		leftover[0] = '\0';
 	}
+	free(*stash);
+	*stash = NULL;
 	return (line);
 }
 
@@ -69,7 +71,6 @@ void	ft_remove_node_fd(t_fd_node **head, t_fd_node *current)
 	if (*head == current)
 	{
 		*head = (*head)->next;
-		free(current->stash);
 		free(current);
 	}
 	else
@@ -80,7 +81,6 @@ void	ft_remove_node_fd(t_fd_node **head, t_fd_node *current)
 		if (previous)
 		{
 			previous->next = current->next;
-			free(current->stash);
 			free(current);
 		}
 	}
@@ -98,7 +98,7 @@ t_fd_node	*find_or_create_node(t_fd_node **head, int fd)
 	{
 		*node = malloc(sizeof(t_fd_node));
 		(*node)->fd = fd;
-		(*node)->stash = ft_strdup("");
+		(*node)->leftover[0] = '\0';
 		(*node)->next = NULL;
 	}
 	return (*node);
@@ -109,18 +109,23 @@ char	*get_next_line(int fd)
 	static t_fd_node	*head;
 	t_fd_node			*current;
 	char				*buf;
+	char				*stash;
 	char				*line;
 
 	current = find_or_create_node(&head, fd);
 	buf = malloc(BUFFER_SIZE + 1);
-	current->stash = read_operation(fd, buf, current->stash);
-	if (current->stash == NULL || *current->stash == '\0')
+	if (!current->leftover[0])
+		stash = ft_strldup("", 1);
+	else
+		stash = ft_strldup(current->leftover, ft_strlen(current->leftover));
+	stash = read_operation(fd, buf, stash);
+	free (buf);
+	if (stash == NULL || *stash == '\0')
 	{
-		free (buf);
+		free (stash);
 		ft_remove_node_fd(&head, current);
 		return (NULL);
 	}
-	line = extract_line(&current->stash);
-	free (buf);
+	line = extract_line(&stash, current->leftover);
 	return (line);
 }
