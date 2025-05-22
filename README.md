@@ -203,7 +203,7 @@ After each `read()`, the `stash` is checked to see if it contains a newline `\n`
 - Number of bytes read by the latest `read()` call.
 
 `char *temp_stash*`
-- Temporary pointer used to store the result of appending `buf` to `stash`, before assigning the resulyt back to `stash`. Prevents memory leaks when updating `stash`.
+- Temporary pointer used to store the result of appending `buf` to `stash`, before assigning the result back to `stash`. Prevents memory leaks when updating `stash`.
 
 **Logic** 
 
@@ -249,7 +249,7 @@ Reads up to `BUFFER_SIZE` bytes fom `fd` into `buf`.
     free(stash);
     stash = temp_stash;
 ````
-- `temp_stash` stores the result of `ft_strjoin`, which allocates a new block of memory and copies both `stash` and `buf`into it.
+- `temp_stash` stores the result of `ft_strjoin()`, which allocates a new block of memory and copies both `stash` and `buf`into it.
 - Since `stash` points to a previously allocated string, `free()` the old `stash`to avoid memory leaks.
 - Update `stash` to point to the newly allocated concatenated string.
 <br>
@@ -326,7 +326,7 @@ Calls the helper function `extract_line()`to:
 
 **Variables**
 
-`char *line``
+`char *line`
 - The final line that wil be extracted and returned.
 
 `newline_ptr`
@@ -382,8 +382,7 @@ else
 ```
 If NO newline is found, meaning EOF has been reached and we are returning the final line, which does not end in a newline character;
 - Duplicate the entire `stash` into `line`
-
-Then clear leftover by setting it to an empty string.
+- Then clear `leftover` by setting it to an empty string.
 <br>
 <br>
 
