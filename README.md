@@ -116,7 +116,7 @@ The `extract_line()` function:
 
 </details>
 
-Add details block here
+<details>
 <summary>Line by line breakdown</summary>
 
 ### 1. Variables
