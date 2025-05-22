@@ -18,7 +18,7 @@ This repository contains two versions of the `get_next_line()` function.
 **Features**
 
 - **Works with any file size**, regardless of newline placement
-- **Preserves leftover data** between calls for partial-line handling
+- **Preserves leftover data** between calls
 - **Handles files without a trailing newline** (returns the last line properly)
 - **No memory leaks**, even if the function isn’t called until EOF
 - **Efficient buffer usage** via `BUFFER_SIZE` (read in chunks)
@@ -68,176 +68,220 @@ close(fd);
 The first version of this function is designed to work with only one file descriptor at a time.
 It uses a single static character array to store leftover data between calls.
 As a result, the function must be called repeatedly until it reaches EOF before switching to a new file descriptor.
+
 <details>
+
+<summary> Concise breakdown </summary>
+<br>
+
+1. **Static Initialization**
+
+On the first call, the static leftover buffer is empty. On subsequent calls, it contains any data that was read after the last newline.
+
+2. **Allocate Temporary Buffer**
+
+A temporary buffer `buf` of size `BUFFER_SIZE + 1` is allocated to hold the output of the read() system call.
+
+3. **Initialize stash**
+
+The contents of `leftover` (if any) are duplicated into a new `stash` string, which will accumulate data for the current line.
+
+4. **Read Until Newline or EOF**
+
+The `read_operation()` function reads repeatedly from `fd`, appending each read chunk from `buf` to `stash`, until:
+
+- A newline character is found in `stash`, or `read()` returns 0 (EOF) or -1 (error).
+
+5. **Check for End of Data**
+
+If `stash` ends up empty (no data read), the function:
+
+- Frees `buf` and `stash`
+- Returns NULL to indicate no more lines.
+
+6. **Extract the Line**
+
+The `extract_line()` function:
+
+- Copies characters from `stash` up to and including the first newline into `line`
+
+- Copies any remaining characters after the newline into `leftover`, to be used in the next call.
+
+7. **Clean Up and Return**
+
+- Frees `buf` and `stash`
+
+- Returns the `line` just extracted.
+
+
+</details>
+
+Add details block here
 <summary>Line by line breakdown</summary>
 
-### 1. Variable declarations
+### 1. Variables
 `char *buf`
-	Buffer to store the contents read by the read() operation.
 
-`static char *stash`
-	A persistent buffer to store the contents read into buf during the read() operations.
+- Temporary buffer to hold data read from the file descriptor during each `read()` call.
+<br>
+
+`char *stash`
+
+- Dynamically growing string that holds all data read so far in the current `gnl` call.
+- - After each `read()` call, the contents read into `buf` are appended to `stash`.
+<br>
 
 `char *line`
-	Pointer to the line that will be returned. Up to and containing the newline or end of file.
+
+- Pointer to the line that will be returned. Up to and containing the newline or end of file.
+<br>
+
+`static char leftover[BUFFER_SIZE + 1];`
+
+- Stores any remaining characters _after_ the newline in the peviously returned line.
+- - Declared as `static` so it persists across multiple calls, but is local to the function.
+- - Declared as a fixed-size static array to avoid dynamic memory allocation for leftover data. This ensures that if the program ends before get_next_line() is called until EOF, no memory leak occurs from leftover data.
 
 ---
-### 2. Buffer memory allocation
+### 2. Initialize
 ```c
 buf = malloc(BUFFER_SIZE + 1);
 ```
-Allocate memory for the buffer *buf* using malloc().
+Dynamically allocates memory for the temporary buffer `buf` using `malloc()`.
 
-*`BUFFER_SIZE` is a macro defined in the header file (get_next_line.h), modifiable by compiling with `-D` flag;*
+- This buffer is used in the subsequent `read()` calls to temporarily hold chunks of data before appending the data to `stash`.
 
-```
-cc main.c -D BUFFER_SIZE=9999
-```
+- `BUFFER_SIZE` is a predetermined constant that determines how many bytes to read at a time. It is defined in `get_next_line.h` and set to 32 bytes. This can also be adjusted by compiling the program using the define flag `-D`. 
 
-+1 is added for the null terminator, as we need *buf* to be a valid string.
-<br>
-<br>
+- - `cc main.c -D BUFFER_SIZE=9999.`
+
+- The `+1` is to allocate space for a null termintor, so the buffer can be treated as a valid string after reading.
 <br>
 
 ```c
-if (stash == NULL)
-```
-Check if stash has been initialized.
-<br>
-<br>
-<br>
-```c
-	stash = ft_strdup("");
-```
-If stash is NULL, we need to initialize *stash* to be an empty null terminated string. For this, we use our helper function ft_strdup().The function allocates memory and returns a duplicate of the string passed in as an argument. <br>
+stash = ft_strdup(leftover);
+````
+This duplicates the contents of the static `leftover` array and returns a dynamically allocated string. 
+
+This is essential for preserving line continuity across multiple `read()` calls.
+
+- On the first call, `leftover` is a zero-initialized static array _(i.e an empty string)_, so `stash` begings as an empty string _("")_.
+- On subsequent `gnl` calls, `leftover` may contain leftover characters from the last read call _(everything after the last newline)_.
+- `stash` becomes the starting point for accumulating the full line. Any new data `read()` from the file will be appended to it. 
 
 ---
 
-### 3. The read operation
+### 3. Read and Accumulate data
 
 ```c
 stash = read_operation(fd, buf, stash);
 ```
-Read the file in `BUFFER_SIZE` chunks and store the chunks in *stash*, until we find a newline `\n` in *stash*.
-<br>
-<br>
+Calls the helper function `read_operation()` to read `BUFFER_SIZE`chunks of data from the file descriptor `fd`, into `buf` and append it to the `stash`.
+
+After each `read()`, the `stash` is checked to see if it contains a newline `\n` character OR  if `read()` returned 0 or -1, indicating end of the file (EOF) or a read error.
+- If a newline character is found, the current `stash` is returned.
+- If EOF / error, the `stash` _(which may contain partial data)_ is retuned.
+
+---
+
+<details>
+
+<summary> Helper function read_operation() line by line breakdown </summary>
 <br>
 
-***Inside the helper function***
+**Function prototype**
+
+`char	*read_operation(int fd, char *buf, char *stash)`
+- `fd` The file descriptor to read from
+- `buf` A temporary buffer to store data read from `fd`
+- `stash` A dynamically allocated string to hold accumulated data so far
+
+
+**Variables**
+
+`int bytes_read;`
+- Number of bytes read by the latest `read()` call.
+
+`char *temp_stash*`
+- Temporary pointer used to store the result of appending `buf` to `stash`, before assigning the resulyt back to `stash`. Prevents memory leaks when updating `stash`.
+
+**Logic** 
 
 ```c
-char	*read_operation(int fd, char *buf, char *stash)
+if (ft_strchr(stash, '\n'))
+    return (stash);
 ```
-
-read_operation() is a helper function which will read the file in chunks and store the read chunks into *stash*, after each read it will check if *stash* contains a newline (`\n`), once it detects a newline or hits the end of the file, it returns *stash*.
-<br>
-<br>
-<br>
-
-***read_operation() variables***
-
-`int bytes_read` - *Store the number of bytes read during the read() operation. This will be used as the index for the *buf* null terminator OR an indicator that the file has been fully read, since read() returns 0 if there is nothing left to read.*
-
-`char *temp_stash` - *Temporary pointer used to store the result of ft_strjoin, before assigning the result back to stash. Prevents memory leaks when updating stash.*
-<br>
-<br>
+Checks if the current `stash` already contains a newline character.
+- If true, returns `stash` immdediately without reading more, because we already have at least one full line in `stash`.
 <br>
 
 ```c
 while (1)
+{
 ```
-While (1), is an infinite loop. This loop will only stop if a break is found. In our case, break will be used when there is nothing left to read, or a newline is found in *stash*.
-<br>
+Starts an infinite loop to read data chunks until a newline character is found OR EOF/error occurs.
 <br>
 <br>
 
 ```c
-bytes_read = read(fd, buf, BUFFER_SIZE);
+    bytes_read = read(fd, buf, BUFFER_SIZE);
 ```
-Store the number of bytes read by the read() operation in the variable bytes_read.
-Run the read() operation on the *fd* specified by the caller, storing the read contents into *buf* and only reading BUFFER_SIZE amount of bytes.
-<br>
-<br>
+Reads up to `BUFFER_SIZE` bytes fom `fd` into `buf`.
+
+`bytes_read` will be:
+- \> 0: Number of bytes read.
+- == 0: End of file (EOF).
+- < 0: read error.
 <br>
 
 ```c
-if (bytes_read <= 0)`<br>
-	buf[0] = '\0';
-``` 
-If the read() operation returned 0 or less, meaning the end of the file was found and nothing was stored in buf. We null terminate buf at index 0.
-<br>
-<br>
-<br>
-
-```c
-else
-    buf[bytes_read] = '\0';
+	if (bytes_read <= 0)
+		buf[0] = '\0';
+	else
+		buf[bytes_read] = '\0';
 ```
-If more than 0 bytes were read, we null terminate buf at the index specified by the number of bytes read. This index will be pointing to the memory slot after the last character in buf.
-<br>
-<br>
+- If nothing read (EOF or error), set `buf` to an empty string.
+- Otherwise, null-terminate `buf` after the bytes, turning `buf` into a valid C-string.
 <br>
 
 ```c
-temp_stash = ft_strjoin(stash, buf);
+    temp_stash = ft_strjoin(stash, buf);
+    free(stash);
+    stash = temp_stash;
+````
+- `temp_stash` stores the result of `ft_strjoin`, which allocates a new block of memory and copies both `stash` and `buf`into it.
+- Since `stash` points to a previously allocated string, `free()` the old `stash`to avoid memory leaks.
+- Update `stash` to point to the newly allocated concatenated string.
+<br>
+
+```c
+    if (ft_strchr(stash, '\n') != NULL || bytes_read <= 0)
+        break ;
 ```
-Concatenate the contents of *buf* into *stash* using the helper function *ft_strjoin()*. Storing the new string returned by *ft_strjoin* in *temp_stash*.
-<br>
-<br>
-<br>
-
-```c
-free (stash);
-```
-Free the current contents of *stash*.
-<br>
-<br>
+Checks if the updated `stash` now contains a newline character or if EOF / error was eached _(bytes_read <= 0)_
+- If either condition is true, exit the loop because we either have a complete line or no more data.
 <br>
 
 ```c
-stash = temp_stash;
-
-```
-Assign the new string made of *stash*+*buf*, which is stored in *temp_stash*, to *stash*.
-<br>
-<br>
-<br>
-
-```c
-if (ft_strchr(stash, '\n') != NULL || bytes_read <= 0)
-```
-Check if *stash* contains a newline `\n`, using the helper function *ft_strchr()*<br>
-OR<br>
-if *bytes_read* is 0 or less, meaning the end of the file has been reached.
-<br>
-<br>
-<br>
-
-```c
-	break ;
-```
-If true, use *break* to exit the while loop.<br>
-
-If false, loop again.
-Eventually a newline character will be found or the end of the file will be reached.
-<br>
-<br>
-<br>
-
-```c
+}
 return (stash);
 ```
-Once the while loop ends, we will return stash.
+Finally return `stash` which **contains all accuulated data up to (and possibly including) a newline, or all data read until EOF / error.**
+
+Exit function.
+
+</details>
 
 ---
 
-### 4. End of file check / Error check.
+### 4. End of file / Error check.
 ```c
 if (stash == NULL || *stash == '\0')
 ```
-If the read() operation returned NULL or stash points to a null terminator. We have nothing to return to the caller. The end of the file has been reached or there has been an error reading the file.
-<br>
-<br>
+This block ensures we don't process empty or invalid data.
+
+- `stash == NULL` Memory allocation failed in either `ft_strdup()` or `ft_strjoin()` OR EOF was reached before any data was read.
+- `*stash == '\0'` Stash is an empty string, meaning there is nothing to return.
 <br>
 
 ```c
@@ -248,98 +292,119 @@ If the read() operation returned NULL or stash points to a null terminator. We h
 	return (NULL);
 }
 ```
-If true, free() the buffer *buf* and *stash*.
-<br>Then also set *stash* to NULL. This must be done since *free()* does not set *stash* to NULL. It just deallocates the memory, leaving *stash* as a dangling pointer: it still contains the same memory address, which now points to freed (invalid) memory.<br>
-Finally return (NULL).
+If true;
+- Free the temporary buffer `buf` that was allocated for reading data.
+- Free the dynamically allocated `stash` string.
+- Then also set `stash` to NULL, since `free()` does not set `stash` to NULL. It just deallocates the memory, leaving `stash` as a dangling pointer, meaning it still contains the same memory address, which now points to freed (invalid) memory.
+- Finally return (NULL). This signals to the caller that EOF was reached and there are no more lines to return OR an error occured.
 
 ---
 ### 5. Line extraction.
 ```c
 line = extract_line(stash, &stash);
 ```
-The line variable will hold the portion of the *stash* string up to and containing the newline character OR up to the end of the file, if no newline is present.
-<br>
-<br>
+Calls the helper function `extract_line()`to:
+- Extract the next full line upto and including the newline character, if present, from `stash`.
+- Save any leftover characters after the newline character into `leftover` for use in the next `get_next_line()` call.
+
+---
+
+<details>
+
+<summary> Helper function extract_line() line by line breakdown </summary>
 <br>
 
-***Inside the helper fucntion***
+**Function prototype**
+
+`char *extract_line(char *stash, char *leftover)`
+
+`stash`
+- Contains  the accumulated data read so far, including one or more potential lines.
+
+`leftover`
+- Static buffer to store characters after the newline (to be used in the next `get_next_line()` call)
+
+**Variables**
+
+`char *line``
+- The final line that wil be extracted and returned.
+
+`newline_ptr`
+- Pointer to the first newline character found in `stash`.
+
+`newline_index`
+- Index of the newline character within `stash`, used for duplication.
+
+**Logic**
+
 ```c
-char	*extract_line(char *stash, char **updated_stash)
+newline_ptr = ft_strchr(stash, '\n');
 ```
-extract_line() is a helper function that extracts the next line from stash, including the newline if present.
-It also trims the extracted part from stash, saving the remainder in *updated_stash so stash can continue where it left off on the next call.
-
-
-Why *****updated_stash?***<br>
-- Even though stash is declared as static in get_next_line(), when passed by value to extract_line(), reassigning it (e.g., stash = ft_strdup(...)) only modifies the local copy of the pointer. The original stash in get_next_line() remains unchanged.
-- By contrast, passing a pointer to stash, as char **updated_stash, lets extract_line() directly modify the original pointer. Doing *updated_stash = ft_strdup(...) updates the actual stash in get_next_line(), preserving the new value and avoiding memory issues.
-<br>
-<br>
+- Searches the `stash` for the first newline character.
+- If found, `newline_ptr` points to it.
+- If NOT found, `newline_ptr` is NULL.
 <br>
 
-***extract_line() variables***
-
-`char *line`- *The extracted line we want to return.*
-
-`char *newline_index` - *A pointer to the newline character in the stash string.*
-<br>
-<br>
-<br>
 
 ```c
-newline_index = ft_strchr(stash, '\n');
-```
-Find the index of the newline character in stash with the helper function ft_strchr() and store the index in newline_index.
-<br>
-<br>
-<br>
-
-```c
-if (newline_index)
+if (newline_ptr)
 {
-	line = ft_strldup(stash, count_chars_to_newline(stash));
-	*updated_stash = ft_strdup(newline_index + 1);
-}
+    newline_index = 0;
+    while (stash[newline_index] != '\n')
+        newline_index++;
 ```
-If a newline is found in stash
-
-Use *ft_strldup()* to copy the part up to and including the newline into *line*. `count_chars_to_newline()` returns the number of characters to the newline, this specifies the number of bytes we will duplicate from *stash* to *line*.
-
-Then update *updated_stash with a duplicate of the remaining string after the newline using ft_strdup().
-This trims the processed line from *stash* and keeps only what’s left for the next call.
-<br>
-<br>
+If a newline is found;
+- Loop through the `stash` to find its index.
+- `newline_index` now holds the position of the first newline character.
 <br>
 
 ```c
+    line = ft_strldup(stash, newline_index + 1);
+```
+- Duplicate everything fom the beginning of `stash` up to and **including the newline character**, hence the +1.
+<br>
+
+```c
+    ft_strlcpy(leftover, newline_ptr + 1, BUFFER_SIZE + 1);
+````
+Copies eveything **after** the newline (i.e. the remaining content) into `leftover`.
+- `leftover` is static, so this content will persist until the next call.
+- `BUFFER_SIZE + 1` ensures space for the null temrinator. 
+<br>
+
+```c
+}
 else
 {
-	line = ft_strdup(stash);
-	*updated_stash = NULL;
+    line = ft_strdup(stash);
+    leftover[0] = '\0';
 }
 ```
-If no newline is found in stash, the entire stash is our final line.
+If NO newline is found, meaning EOF has been reached and we are returning the final line, which does not end in a newline character;
+- Duplicate the entire `stash` into `line`
 
-Create *line* by duplicating *stash*, using *ft_strdup()*.
-
-Update *stash* to NULL. As we no longer need to store content inside it.
-<br>
+Then clear leftover by setting it to an empty string.
 <br>
 <br>
 
 ```c
 return (line);
-```
-Return the extracted string - *line*, back to *get_next_line()*.
+````
+Finally return the extracted line.
+
+Exit function.
+
+</details>
+
 
 ---
 ### 6. Free and Return
 ```c
 free (buf);
+free (stash);
 ```
-Free the buf memory.
-<br>
-<br>
+- Free the temporary buffer `buf` that was allocated for reading data.
+- Free the dynamically allocated `stash` string.
 <br>
 
 ```c
@@ -347,7 +412,7 @@ return (line);
 ```
 Return the extracted line.
 
-Exit function.
+End of `get_next_line()`.
 
 </details>
 
