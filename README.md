@@ -1,11 +1,46 @@
 # get_next_line
 
-This readme is not finished.
+`get_next_line` is a function written in C that reads a file or standard input one line at a time. It returns a freshly allocated string containing the next line each time it's called, including the newline character (`\n`) if present. 
 
-`get_next_line` is a function written in C that reads a file or standard input one line at a time. It returns a freshly allocated string containing the next line each time it's called, including the newline character (`\n`) if present. The use of *lseek()* and global variables was forbidden for this project.
+---
 
 This repository contains two versions of the `get_next_line()` function.
 
+**v.1 "Mandatory"** 
+(get_next_line.c, get_next_line.h, get_next_line_utils.c)
+- - Designed to handle one FD at a time, until EOF.
+
+**v.2 "Bonus"** (get_next_line_bonus.c, get_next_line_bonus.h, get_next_line_utils_bonus.c)
+- - Designed to handle multiple file descriptors with alternating read calls to each, without losing state.
+
+---
+
+**Features**
+
+- **Works with any file size**, regardless of newline placement
+- **Preserves leftover data** between calls for partial-line handling
+- **Handles files without a trailing newline** (returns the last line properly)
+- **No memory leaks**, even if the function isn’t called until EOF
+- **Efficient buffer usage** via `BUFFER_SIZE` (read in chunks)
+- **EOF handling** – returns `NULL`
+- **Safe dynamic memory management** using `malloc`, `free`, and custom helper functions
+- **Clean separation of logic**: reading, line extraction, memory management
+- **Compatible with standard file descriptors** (`stdin`, files, pipes, etc.)
+
+
+**Bonus Version Features**
+
+- **Supports multiple file descriptors** simultaneously
+- **Per-FD state management** via a linked list of nodes
+- **Automatically frees and unlinks** each FD node when its stream reaches EOF
+- **Interleaved FD calls** work correctly (you can alternate reads on different FDs)
+- **Independent leftover buffers** for each FD, preventing cross-contamination of data  
+
+***Note...***
+
+- The use of `lseek()` and global variables was forbidden for this project.
+
+---
 
 <details>
 
@@ -30,7 +65,9 @@ close(fd);
 ---
 
 ## Mandatory (v.1)
-The first version of this function was created with only one file descriptor in mind. A single static character array is used to store the leftover read data from the file descriptor. Meaning the the function must be called repeatedly until EOF before a new `fd` can be used. 
+The first version of this function is designed to work with only one file descriptor at a time.
+It uses a single static character array to store leftover data between calls.
+As a result, the function must be called repeatedly until it reaches EOF before switching to a new file descriptor.
 <details>
 <summary>Line by line breakdown</summary>
 
@@ -317,9 +354,8 @@ Exit function.
 ---
 
 ## Bonus (v.2)
-This bonus task was to modify the function to handle multiple file descriptors, while only using one static variable.
-
-Here a struct is used to store the file descriptor, its associated `stash`, and a pointer to the next node, forming a linked list that tracks each file descriptors state seperately. This allows `get_next_line()` to manage multiple files simultaneously without interference. 
+The bonus implementation supports multiple file descriptors by using a linked list of nodes. Each node holds a file descriptor, its associated leftover buffer, and a pointer to the next node.
+This allows get_next_line() to maintain independent read states for each descriptor, enabling concurrent reads without interference—all while adhering to the constraint of using only one static variable.
 
 <details>
 
@@ -437,9 +473,7 @@ return (*node);
 ```
 - Returns the pointer to the found or newly created node.
 </details>
-
 ---
-
 ### 4. Reading the file.
 ```c
 buf = malloc(BUFFER_SIZE + 1);
@@ -543,7 +577,7 @@ When the loop ends, the final `stash`is returned.
 
 ---
 
-### 5. End of file / Error check.
+### 5. Nothing to return
 
 ```c
 if (current->stash == NULL || *current->stash == '\0')
@@ -659,7 +693,7 @@ return ;
 
 ---
 
-### 6. Extract the return line from stash.
+### 6. Something to return (extract line)
 
 ```c
 line = extract_line(current->stash, &current->stash);
@@ -678,21 +712,18 @@ This line calls the helper function `extract_line()` to:
 **Function prototype**
 
 
-`char *extract_line(char **stash)`
-- `stash` Pointer to the pointer of `stash`. Passing in the address of the pointer, we are able to update it with a new pointer that will point to the remaining content of `stash` once it has been trimmed. Dereferencing this will allow access to the values stored in `stash`. 
-
-
+`char *extract_line(char *stash, char **updated_stash)`
+- `stash` Holds the accumulated data from the previous read operations.
+- `updated_stash` is a pointer to the `stash` pointer so we can replace it with the leftover content after extracting the a line.
 
 **Variables**
-
-`char *trimmed_stash`
-- Will temporarily store the remaining contents of `stash` that come after the newline. 
 
 `char *line;`
 - Will hold the extracted line that will be returned.
 
 `char *newline_i_ptr;`
 - Pointer to the first `\n` character (if any).
+
 
 `int newline_index;`
 - The index / position of the newline character in the `stash` string.
@@ -713,7 +744,7 @@ Searches for the first occurance of `\n` in `stash`.
 if (newline_i_ptr)
 {
 	newline_index = 0;
-	while (*stash[newline_index] != '\n')
+	while (stash[newline_index] != '\n')
 		newline_index++;
 ```
 If a newline character is found in `stash`;
@@ -721,57 +752,24 @@ If a newline character is found in `stash`;
 <br>
 
 ```c
-	line = ft_strldup(*stash, newline_index + 1);
+	line = ft_strldup(stash, newline_index + 1);
 ````
 Duplicates the string **up to and including the newline character** and assigns the duplicated string to `line`.
 <br>
 
 ```c
-	trimmed_stash = ft_strdup(newline_i_ptr + 1);
+	*updated_stash = ft_strdup(newline_i_ptr + 1);
 ```
 Copies everything **after** the newline character in `stash` into a new string.
-- Save the newly allocated string in `trimmed_stash`.
-<br>
+- This becomes the updated `stash`, stored through the pointer `updated_stash`
 
-```c
-	free(*stash);
-	*stash = trimmed_stash;
-```
-- Free the old contents of `stash`.
-- Update the `stash` pointer to point to the beginning of the new trimmed string.
-<br>
-
-```c
-else
-{
-	line = ft_strdup(*stash);
-	free(*stash);
-	*stash = NULL;
-}
-```
-If no newline is found in `stash`, there is no need to trim the stash. 
-- Copy the remaining contents of `stash` to `line`.
-- Free the contents of `stash`.
-- Set stash to NULL, to prevent a dangling pointer.
-<br>
-
-```c
-return (line);
-```
-Finally return the extracted `line` from `stash` and exit function.
+TBC because I found a new way to handle updating stash, and I want to write the doc based on that. 
 
 </details>
 
 ---
 
-### 7. Free and exit.
-
-```c
-free (buf);
-return (line);
-```
--Free the temporary buffer.
--Return the `line` read from `fd` to the caller.
 
 </details>
 
+---
