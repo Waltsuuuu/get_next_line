@@ -421,7 +421,7 @@ End of `get_next_line()`.
 The bonus implementation supports multiple file descriptors by using a linked list of nodes. Each node holds a file descriptor, its associated leftover buffer, and a pointer to the next node.
 This allows get_next_line() to maintain independent read states for each descriptor, enabling concurrent reads without interference—all while adhering to the constraint of using only one static variable.
 
-details block here
+<details>
 
 <summary>Line by line breakdown</summary>
 
