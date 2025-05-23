@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:15:23 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/21 13:42:56 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/23 15:13:17 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,8 @@ char	*read_operation(int fd, char *buf, char *stash)
 		else
 			buf[bytes_read] = '\0';
 		temp_stash = ft_strjoin(stash, buf);
+		if (!temp_stash)
+			return (NULL);
 		free (stash);
 		stash = temp_stash;
 		if (ft_strchr(stash, '\n') != NULL || bytes_read <= 0)
@@ -97,6 +99,8 @@ t_fd_node	*find_or_create_node(t_fd_node **head, int fd)
 	if (!*node)
 	{
 		*node = malloc(sizeof(t_fd_node));
+		if (!*node)
+			return (NULL);
 		(*node)->fd = fd;
 		(*node)->leftover[0] = '\0';
 		(*node)->next = NULL;
@@ -114,6 +118,8 @@ char	*get_next_line(int fd)
 
 	current = find_or_create_node(&head, fd);
 	buf = malloc(BUFFER_SIZE + 1);
+	if (!buf)
+		return (NULL);
 	if (!current->leftover[0])
 		stash = ft_strldup("", 1);
 	else

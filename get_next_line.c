@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:15:23 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/21 14:12:24 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/23 15:07:05 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,11 +76,15 @@ char	*extract_line(char *stash, char *leftover)
 		while (stash[newline_index] != '\n')
 			newline_index++;
 		line = ft_strldup(stash, newline_index + 1);
+		if (!line)
+			return (NULL);
 		ft_strlcpy(leftover, newline_ptr + 1, BUFFER_SIZE + 1);
 	}
 	else
 	{
 		line = ft_strdup(stash);
+		if (!line)
+			return (NULL);
 		leftover[0] = '\0';
 	}
 	return (line);
@@ -94,7 +98,11 @@ char	*get_next_line(int fd)
 	static char	leftover[BUFFER_SIZE + 1];
 
 	buf = malloc(BUFFER_SIZE + 1);
+	if (!buf)
+		return (NULL);
 	stash = ft_strdup(leftover);
+	if (!stash)
+		return (NULL);
 	stash = read_operation(fd, buf, stash);
 	if (stash == NULL || *stash == '\0')
 	{
