@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:16:03 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/21 12:49:17 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/23 15:17:45 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,6 @@
 # endif
 
 # include <unistd.h>
-# include <fcntl.h>
-# include <stdio.h>
 # include <stdlib.h>
 
 typedef struct s_fd_node

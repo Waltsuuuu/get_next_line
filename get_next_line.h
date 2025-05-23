@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:16:03 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/20 21:42:56 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/23 15:17:33 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,6 @@
 # endif
 
 # include <unistd.h>
-# include <fcntl.h>
-# include <stdio.h>
 # include <stdlib.h>
 
 void	*ft_memcpy(void *dest, const void *src, size_t n);
