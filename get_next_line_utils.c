@@ -18,6 +18,8 @@ void	*ft_memcpy(void *dest, const void *src, size_t n)
 	const unsigned char	*src_str;
 	size_t				i;
 
+	if (!dest || !src)
+		return (NULL);
 	dest_str = (unsigned char *)dest;
 	src_str = (const unsigned char *)src;
 	i = 0;
@@ -70,6 +72,8 @@ char	*ft_strjoin(char const *s1, char const *s2)
 		return (NULL);
 	len = ft_strlen((char *)s1) + ft_strlen((char *)s2) + 1;
 	str = malloc(len);
+	if (!str)
+		return (NULL);
 	i = 0;
 	while (s1[i] != '\0')
 	{
@@ -78,11 +82,7 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	}
 	j = 0;
 	while (s2[j] != '\0')
-	{
-		str[i] = s2[j];
-		j++;
-		i++;
-	}
+		str[i++] = s2[j++];
 	str[i] = '\0';
 	return (str);
 }
@@ -92,6 +92,8 @@ char	*ft_strdup(const char *s)
 	char	*new_str;
 	size_t	len;
 
+	if (!s)
+		return (NULL);
 	len = ft_strlen((char *)s) + 1;
 	new_str = malloc(len * sizeof(char));
 	if (!new_str)

@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:15:23 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/23 15:13:17 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/26 16:58:15 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@ char	*read_operation(int fd, char *buf, char *stash)
 	int		bytes_read;
 	char	*temp_stash;
 
+	if (!stash)
+		return (NULL);
 	if (ft_strchr(stash, '\n'))
 		return (stash);
 	while (1)
@@ -93,6 +95,8 @@ t_fd_node	*find_or_create_node(t_fd_node **head, int fd)
 {
 	t_fd_node	**node;
 
+	if (!head)
+		return (NULL);
 	node = head;
 	while (*node && (*node)->fd != fd)
 		node = &(*node)->next;

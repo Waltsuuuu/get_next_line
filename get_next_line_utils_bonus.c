@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:16:00 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/21 12:45:05 by wheino           ###   ########.fr       */
+/*   Updated: 2025/05/26 16:59:02 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@ char	*ft_strldup(const char *s, size_t len)
 	char	*new_str;
 	int		i;
 
+	if (!s)
+		return (NULL);
 	new_str = malloc(len * sizeof(char) + 1);
 	if (!new_str)
 		return (NULL);
@@ -71,6 +73,8 @@ char	*ft_strjoin(char const *s1, char const *s2)
 		return (NULL);
 	len = ft_strlen((char *)s1) + ft_strlen((char *)s2) + 1;
 	str = malloc(len);
+	if (!str)
+		return (NULL);
 	i = 0;
 	while (s1[i] != '\0')
 	{
@@ -79,11 +83,7 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	}
 	j = 0;
 	while (s2[j] != '\0')
-	{
-		str[i] = s2[j];
-		j++;
-		i++;
-	}
+		str[i++] = s2[j++];
 	str[i] = '\0';
 	return (str);
 }
@@ -92,6 +92,8 @@ size_t	ft_strlcpy(char *dst, const char *src, size_t dstsize)
 {
 	size_t	i;
 
+	if (!src || !dst)
+		return (0);
 	i = 0;
 	if (dstsize == 0)
 		return (ft_strlen((char *)src));
