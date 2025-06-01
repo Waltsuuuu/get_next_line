@@ -6,7 +6,7 @@
 /*   By: wheino <wheino@student.hive.fi>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/05/14 14:15:23 by wheino            #+#    #+#             */
-/*   Updated: 2025/05/26 17:01:09 by wheino           ###   ########.fr       */
+/*   Updated: 2025/06/01 14:43:20 by wheino           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,13 +102,15 @@ char	*get_next_line(int fd)
 		return (NULL);
 	stash = ft_strdup(leftover);
 	if (!stash)
+	{
+		free (buf);
 		return (NULL);
+	}
 	stash = read_operation(fd, buf, stash);
 	if (stash == NULL || *stash == '\0')
 	{
 		free (buf);
 		free (stash);
-		stash = NULL;
 		return (NULL);
 	}
 	line = extract_line(stash, leftover);
